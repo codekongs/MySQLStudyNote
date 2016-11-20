@@ -1,0 +1,1212 @@
+﻿一、进入数据库
+
+1.启动与停止数据库服务
+
+<1>启动:net start mysql
+
+<2>停止:net stop mysql
+
+2.登录与退出数据库
+
+<1>登录:mysql -u root -p root;     mysql -u root -p;		(注:-P端口号   -h主机号)
+
+<2>退出:\q   exit;  quit 
+
+二、修改数据库有关信息
+
+1.修改提示符
+
+<1>未登录修改 --- mysql -u root -p root --prompt 提示符
+提示符: \D ---- 当前日期   \h ----- 主机名    \d ------ 当前数据库    \u ------ 当前用户
+
+<2>已登录修改 ------- prompt 提示符
+
+三、数据库常见命令
+
+1.显示服务器当前版本  SELECT VERSION;
+
+2.显示当前时间    SELECT NOW();
+
+3.显示当前用户     SELECT USER();
+
+四、操作数据库的命令([]中的可有可没有)
+
+1.创建数据库  ---- CREATE DATABASE [IF NOT EXISTS] szh CHARACTER SET utf8;
+
+2.查看数据库 
+
+<1>查看数据库列表 ----- SHOW DATABASES;
+
+<2>查看创建的数据库的信息  ----- SHOW CREATE DATABASE szh;
+
+3.查看错误(警告) ---- SHOW WARNINGS;
+
+4.更改数据库的编码方式 ------ ALTER DATABASE szh CHARACTER SET utf8;
+
+5.删除数据库 ----- DROP DATABASE szh;
+
+五、数据库数据类型
+
+1.整型
+
+<1>TINYINT   有符号值 -128--127	 无符号0--255 位数：1
+
+<2>SMALLINT    	位数：2
+
+<3>MEDIUMINT		位数：3
+
+<4>INT			位数：4
+
+<5>BIGINT		位数：8
+
+2.浮点型
+
+<1>FLOAT[(M,D)]			小数位后7位 注：M---总位数		D---小数位数
+
+<2>DOUBLE[(M,D)]
+
+3.日期时间型
+
+<1>YEAR						位数；1
+
+<2>TIME                     位数；3
+
+<3>DATE                     位数；3
+
+<4>DATETIME                 位数；8
+
+<5>TIMESTAMP                位数；4
+
+4.字符型
+
+<1>CHAR                 定长类型
+
+<2>VARCHAR              变长类型
+
+<3>TINYTEXT
+
+<4>TEXT
+
+<5>MEDIUMTEXT
+
+<6>LONGTEXT
+
+<7>ENUM         枚举值取决于枚举的个数(1个或2个字节)
+
+<8>SET       集合
+
+六、数据表
+
+1.USE 数据库    打开数据库
+
+2.SELECT DATABASE()  验证打开的数据库
+
+3.创建数据表		
+
+CREATE TABLE [IF NOT EXISTS] tab1(
+		username VARCHAR(20),
+		age TINYINT UNSIGNED,
+		salary FLOAT(8,2) UNSIGNED
+);
+
+4.查看数据表   SHOW TABLES;   SHOW TABLES FROM szh;
+
+5.查看数据表结构    SHOW COLUMNS FROM tab1;
+
+七、记录的插入与查找
+
+1.插入记录
+
+INSERT [INTO] tab1 [(username,age salary)] values ('szh',19,10000);
+
+注：当插入的记录完整时可以省略字段名，当只给某一字段赋值必须指明字段名
+
+2.查看记录
+
+SELECT * FROM tab1;
+
+3.空值与非空(默认为空)
+
+<1>NULL  字段可以为空
+
+<2>NOT NULL   字段不可以为空
+
+CREATE TABLE tab2(
+	username  VARCHAR(20) NOT NULL,
+	age TINYINT  UNSIGNED NULL
+);
+
+4.自动编号、自动增加，且必须与主键组合使用
+
+<1>自动增加AUTO_INCREMENT
+
+<2>主键 PRIMARY KEY
+
+CREATE TABLE tab3(
+	id SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	username VARCHAR(30) NOT NULL
+);
+
+注:AUTO_INCREMENT必须与主键PRIMARY KEY一起使用，但主键不一定要与自增一起使用
+
+八、约束
+
+1.唯一约束  UNIQUE KEY
+
+<1>八、唯一约束可以保证记录的唯一性
+
+<2>唯一约束的字段可以为空值
+
+<3>每张数据表可以存在多个唯一约束
+
+CREATE TABLE tab5(
+	id SMALLINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+	username VARCHAR(20) NOT NULL UNIQUE KEY,
+	age TINYINT UNSIGNED
+);
+
+插入第一条记录:INSERT INTO tab5(username,age)VALUES('Tom',22); 
+
+或者可以插入 INSERT INTO (username,age)VALUES('',22); 
+
+唯一约束可以为空值，但是是唯一一个空值)
+
+插入第二条相同记录时报错(因为username是唯一约束不能相同)
+
+2.默认约束(在写入记录时，没有明确为该字段赋值，则用默认赋值)
+
+CREATE TABLE tab6(
+	id SMALLINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+	username VARCHAR(20) NOT NULL UNIQUE KEY,
+	sex ENUM('1','2','3') DEFAULT '3'				//枚举类型
+);
+
+执行 INSERT INTO tab6(username)VALUES('zwk');
+插入的记录中sex的值为默认3
+
+3.外键约束(FOREIGN KEY)
+
+<1>父表自表必须使用相同的存储引擎，并且禁止使用临时表。
+
+在mysql配置文件my.ini中确保default-strong-engine=INNODB;(修改完重启mysql服务)
+
+<2>数据表的存储引擎只能为InnoDB
+
+<3>外键列和参照列必须具有相似的数据类型。其中数字的长度或是否有符号位必须相同；而字符的长度则可以不同。
+
+<4>外键列和参照列必须创建索引，如果外键列不存在索引的话，mysql将自动创建索引。
+
+CREATE TABLE provinces(
+	id SMALLINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+	pname VARCHAR(20) NOT NULL
+);
+
+输入SHOW CREATE TABLE provinces查看标的相关信息
+CREATE TABLE users(
+	id SMALLINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+	username VARCHAR(10) NOT NULL,
+	pid SMALLINT UNSIGNED,						//SMALLINT UNSIGNED 缺一不可
+	FOREIGN KEY (pid) REFERENCES provinces(id)
+);
+
+输入SHOW INDEXES FROM provinces\G;来查看是否创建索引（\G表示以网格的形式来呈现）
+
+4.外键约束的参照操作
+
+<1>CASCADE:从父表删除或且自动删除或更新子表中匹配的行。
+
+CREATE TABLE users1(
+	id SMALLINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+	username VARCHAR(10) NOT NULL,
+	pid SMALLINT UNSIGNED,
+	FOREIGN KEY (pid) REFERENCES provinces(id) ON DELETE CASCADE
+);
+
+插入时，先插入父表，才能插入子表
+
+<2>SET NULL:从父表中删除或更新行,并设置子表中的外键列为NULL。使用该选项必须保证字表列没有指定NOT NULL.
+
+<3>RESTRICT:拒绝对父表的删除或更新操作。
+
+<4>标准SQL的关键字,在mysql中与RESTRICT相同。
+注：一般不使用上述的物理约束(因为上述约束只有在数据库引擎为INNODB)，而使用逻辑约束。
+
+5.表级约束和列级约束
+
+<1>对一个数据列创建的约束为列级约束。
+
+<2>对多个数据列建立的约束为表级约束。
+
+<3>列级约束既可以在列定义时声明,也可以在列定以后约束,表级约束只能在列定以后声明。
+
+<4>NOT NULL 和DEFAULT约束不存在表级约束，只有列级约束。
+
+九、修改数据表
+
+1.添加单列
+
+ALTER TABLE tab_name ADD [COLUMN] col_name col属性 [FIRST|AFTER col_name] (FIRST为插在开头,AFTER为插在某一列之后)
+
+例：ALTER TABLE users1 ADD age TINYINT UNSIGNED NOT NULL DEFAULT 10;
+	ALTER TABLE users1 ADD password VARCHAR(32) NOT NULL AFTER username;
+
+2.添加多列
+
+ALTER TABLE tab_name ADD [COLUMN](col_name col属性,col_name col属性……);	
+注：添加多列不能指定位置,只能放在数据表的最后
+
+3.删除单列
+
+ALTER TABLE tab_name DROP [COLUMN] col_name;
+
+4.删除多列
+
+ALTER TABLE tab_name DROP [COLUMN] col_name1,DROP col_name2……;
+
+5.删除的同时添加(多个操作之间用,隔开)
+
+ALTER TABLE tab_name DROP [COLUMN] col_name1,ADD col_name2……;
+
+6.添加约束
+
+<1>添加主键
+
+ALTER TABLE users2 CONSTRAINT(约束) PK_users2_id PRIMARY KEY (id);
+
+<2>添加唯一约束
+
+ALTER TABLE tab_name ADD [CONSTRAINT[symbol]] UNIQUE [INDEX|KEY][index_name][index_type](index_col_name)
+
+例:ALTER TABLE users2 ADD UNIQUE (username);
+
+<3>添加外键约束
+
+ALTER TABLE users2 ADD FOREIGN KEY (pid) REFERENCES province (id);
+
+<4>添加或删除默认约束
+
+ALTER TABLE tab_name ALTER [COLUMN] col_name {SET DEFAULT literal|DROP DEFAULT}
+
+7.删除约束
+
+<1>删除主键约束
+
+ALTER TABLE tab_name DROP PRIMARY KEY;
+
+<2>删除唯一约束
+
+ALTER TABLE tab_name DROP {INDEX|KEY} index_name
+
+ALTER TABLE users2 DROP INDEX username;
+
+注： 查看约束的名字： SHOW INDEXES FROM users2;
+
+<3>删除外键约束
+
+ALTER TABLE tab_name DROP FOREIGN KEY fk_symbol
+
+查看外键约束的名字
+
+SHOW CREATE TABLE users2;
+
+ALTER TABLE users2 DROP FOREIGN KEY 外键名
+
+8.修改列定义(修改字段属性和位置)
+
+ALTER TABLE tab_name MODIFY [COLUMN] col_name  column_definition [FIRST|AFTER col_name]
+
+例:ALTER TABLE users2 MODIFY id SMALLINT UNSIGNED NOT NULL FIRST;
+
+9.修改列名称
+
+ALTER TABLE tab_name CHANGE [COLUMN] old_col_name new_col_name  column_definition [FIRST|AFTER col_name]
+
+例:ALTER TABLE users2 CHANGE pid p_id TINYINT UNSIGNED NOT NULL;
+
+9.修改数据表名
+
+<1>法一:ALTER TABLE tab_name RENAME [TO|AS] new_tab_name;
+
+<2>法二:RENAME TABLE tab_name TO new_tab_name [,tab_name2 TO new_tab_name]……
+
+十、有关记录的操作
+
+USE test;
+CREATE TABLE users(
+	id SMALLINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+	username VARCHAR(20) NOT NULL,
+	password VARCHAR(32) NOT NULL,
+	age TINYINT UNSIGNED NOT NULL DEFAULT 10,
+	sex BOOLEAN
+);
+///////////////////////////////////////////////////////////////////
+
+1.插入记录(1)(可一次性插入多条数据用,分隔)
+INSERT [INTO] tab_name [(col_name,……)] {VALUES|VALUE} ({expr|DEFAULT},……),(……),……
+<1>省略字段名,则所有字段都要赋值(此处对于自增的id字段做如下处理,将其值赋为NULL或DEFAULT,则会自动编号);
+
+例:INSERT users VALUES (NULL|DEFAULT,'Tom','888',12,1);    (此时id便会自动编号)
+
+2.插入记录(2)
+
+INSERT [INTO] tab_name SET col_name {expr|DEFAULT},……
+
+注:与法一的区别在于，此方法可以使用子查询.而且只能一次写入一条数据
+
+例:INSERT users SET username='szh',password='999';
+
+3.插入记录(3)(此方法可以将查询结果插入到指定数据表)
+
+INSERT [INTO] tab_name [(col_name,……)] SELECT ……(具体见后面12条)
+/////////////////////////////////////////////////////////////////////
+
+4.更新记录(单表更新)
+
+UPDATE [LOW_PRIORITY][IGNORE] table_reference SET col_name1={expr1|DEFAULT}[,col_name2={expr2|DEFAULT}]……[WGERE where_condition]
+
+注:<1>PRIORITY ----- 优先级  <2>如果省略where则所有的数据都将被更新
+
+例:UPDATE users SET age=age+5;(这时每一天数据的age都将被+5);
+
+UPDATE users SET age=age-id,sex=0;
+
+UPDATE users SET age=age+10 WHERE id%2=0;
+
+/////////////////////////////////////////////////////////////////////////////
+
+5.删除记录(单表删除)
+
+DELETE FROM tab_name [WHERE where_condition]
+
+例:DELETE FROM users WHERE id=2;
+
+/////////////////////////////////////////////////////////////////////////
+
+6.查找记录(SELECT)
+
+SELECT select_expr [,select_expr……]
+[
+	FROM table_references
+	[WHERE where_condition]
+	[GROUP BY {col_name|position}[ASC|DESC],……]
+	[HAVING where_condition]
+	[ORDER BY {col_name|expr
+	|position}[ASC|DESC],……]
+	[LIMIT {[offset,] row_count|row_count OFFSET offset}]
+]
+
+例:<1>简单表达式 SELECT NOW(); SELECT 3+5;
+
+<2>查询表达式(查询数据表中的某几行) SELECT id,username FROM users;   (
+
+id和username的顺序会影响显示顺序) 
+
+SELECT users.id,users.username FROM users;     (此句可以达到和上面同样的效果(适合于多表连接后的查找))
+
+<3>查询表达式可以使用[AS] alias_name 为其赋予别名,别名可用于GROUP BY或HAVING子句
+
+SELECT id AS userId,username AS uname FROM users;
+
+7.WHERE表达式
+
+<1>对记录进行过滤,如果没有指定WHERE子句,则显示所有子句.
+
+<2>在WHERE表达式中,可以使用mysql支持的函数或运算符.
+
+8.查询结果分组(GROUP BY)
+
+<1>ESC(默认)升序 DESC(降序)
+
+SELECT sex FROM users GROUP BY sex
+
+或SELECT sex FROM users GROUP BY 1;(此处的1位SELECT 后面的字段的位置)
+
+////////////////////////////////////////////////////
+
+9.分组条件[HAVING]
+
+[HAVING where_condition]
+
+注:使用条件，在指定分组条件时,要么指定一个聚合函数(sum,max,min,avg,count---返回值只有一个),要么要分组的条件字段必须出现在SELECT后面的字段中.
+
+例:SELECT sex FROM users GROUP BY sex HAVING age>35;  (错的！！！！)
+
+SELECT sex,age FROM users GROUP BY sex HAVING age>35;  (正确)
+
+SELECT sex FROM users GROUP BY sex HAVING count(id)>0;  (正确)
+
+///////////////////////////////////////////////////////
+
+10.对查询结果排序
+
+[ORDER BY {col_name|expr|position}[ASC|DESC],……]
+
+SELECT * FROM users ORDER BY age DESC;
+
+SELECT * FROM users ORDER BY age,id DESC;   (多个查询限制条件)
+
+///////////////////////////////////////////////////
+
+11.限制查询结果返回的数量(索引从0开始)
+
+[LIMIT {[offset,]row_count|row_count OFFSET offset}]   
+
+例:SELECT * FROM users LIMIT 2;   (只写一个数字表示从第一天开始返回2条数据)
+
+SELECT * FROM users LIMIT 2,3;(从索引为2 的开始返回3条数据);
+
+/////////////////////////////////////////////////////
+
+12.将查找结果存储到指定数据表
+
+CREATE TABLE usertest(
+	id SMALLINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+	username VARCHAR(20)
+);
+
+INSERT userstest(username) SELECT username FROM users WHERE age!=12;
+
+十一、子查询
+
+数据准备
+ -- 创建数据表
+
+  CREATE TABLE IF NOT EXISTS tdb_goods(
+    goods_id    SMALLINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    goods_name  VARCHAR(150) NOT NULL,
+    goods_cate  VARCHAR(40)  NOT NULL,
+    brand_name  VARCHAR(40)  NOT NULL,
+    goods_price DECIMAL(15,3) UNSIGNED NOT NULL DEFAULT 0,
+    is_show     BOOLEAN NOT NULL DEFAULT 1,
+    is_saleoff  BOOLEAN NOT NULL DEFAULT 0
+  );
+
+  插入记录
+   INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('R510VC 15.6英寸笔记本','笔记本','华硕','3399',DEFAULT,DEFAULT);
+ 
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('Y400N 14.0英寸笔记本电脑','笔记本','联想','4899',DEFAULT,DEFAULT);
+ 
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('G150TH 15.6英寸游戏本','游戏本','雷神','8499',DEFAULT,DEFAULT);
+ 
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('X550CC 15.6英寸笔记本','笔记本','华硕','2799',DEFAULT,DEFAULT);
+ 
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('X240(20ALA0EYCD) 12.5英寸超极本','超级本','联想','4999',DEFAULT,DEFAULT);
+ 
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('U330P 13.3英寸超极本','超级本','联想','4299',DEFAULT,DEFAULT);
+ 
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('SVP13226SCB 13.3英寸触控超极本','超级本','索尼','7999',DEFAULT,DEFAULT);
+ 
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('iPad mini MD531CH/A 7.9英寸平板电脑','平板电脑','苹果','1998',DEFAULT,DEFAULT);
+ 
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('iPad Air MD788CH/A 9.7英寸平板电脑 （16G WiFi版）','平板电脑','苹果','3388',DEFAULT,DEFAULT);
+ 
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES(' iPad mini ME279CH/A 配备 Retina 显示屏 7.9英寸平板电脑 （16G WiFi版）','平板电脑','苹果','2788',DEFAULT,DEFAULT);
+ 
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('IdeaCentre C340 20英寸一体电脑 ','台式机','联想','3499',DEFAULT,DEFAULT);
+ 
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('Vostro 3800-R1206 台式电脑','台式机','戴尔','2899',DEFAULT,DEFAULT);
+ 
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('iMac ME086CH/A 21.5英寸一体电脑','台式机','苹果','9188',DEFAULT,DEFAULT);
+ 
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('AT7-7414LP 台式电脑 （i5-3450四核 4G 500G 2G独显 DVD 键鼠 Linux ）','台式机','宏碁','3699',DEFAULT,DEFAULT);
+ 
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('Z220SFF F4F06PA工作站','服务器/工作站','惠普','4288',DEFAULT,DEFAULT);
+ 
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('PowerEdge T110 II服务器','服务器/工作站','戴尔','5388',DEFAULT,DEFAULT);
+ 
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('Mac Pro MD878CH/A 专业级台式电脑','服务器/工作站','苹果','28888',DEFAULT,DEFAULT);
+ 
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES(' HMZ-T3W 头戴显示设备','笔记本配件','索尼','6999',DEFAULT,DEFAULT);
+
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('商务双肩背包','笔记本配件','索尼','99',DEFAULT,DEFAULT);
+
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('X3250 M4机架式服务器 2583i14','服务器/工作站','IBM','6888',DEFAULT,DEFAULT);
+ 
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('玄龙精英版 笔记本散热器','笔记本配件','九州风神','88',DEFAULT,DEFAULT);
+
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES(' HMZ-T3W 头戴显示设备','笔记本配件','索尼','6999',DEFAULT,DEFAULT);
+
+ INSERT tdb_goods (goods_name,goods_cate,brand_name,goods_price,is_show,is_saleoff) VALUES('商务双肩背包','笔记本配件','索尼','99',DEFAULT,DEFAULT);
+
+1.子查询是指在另一个查询语句中的SELECT子句。
+
+  例句：
+
+  SELECT * FROM t1 WHERE column1 = (SELECT column1 FROM t2);
+
+  其中，SELECT * FROM t1 ...称为Outer Query[外查询](或者Outer Statement),
+
+  SELECT column1 FROM t2 称为Sub Query[子查询]。
+
+  所以，我们说子查询是嵌套在外查询内部。而事实上它有可能在子查询内部再嵌套子查询。
+
+  子查询必须出现在圆括号之间。
+ 
+2.使用比较运算符的子查询(!=等价于<>)
+
+operand comparison_operator subquery
+
+AVG(求平均值)
+
+SELECT AVG(goods_price) FROM tdb_goods;
+
+SELECT ROUND(AVG(goods_price),2) FROM tdb_goods;
+
+SELECT goods_id,goods_name,goods_price FROM tdb_goods WHERE goods_price>=5392.39;
+
+子查询
+SELECT goods_id,goods_name,goods_price FROM tdb_goods WHERE goods_price>=(SELECT ROUND(AVG(goods_price),2) FROM tdb_goods);
+
+SELECT goods_id,goods_name,goods_price FROM tdb_goods WHERE goods_price>(SELECT goods_price FROM tdb_goods WHERE goods_cate='超级本');  (会报错,返回的结果大于一行)
+
+解决以上问题:使用ANY、SOME、ALL修饰的比较运算符
+<1>ANY和SOME等价,只要符合一个即可
+
+SELECT goods_id,goods_name,goods_price FROM tdb_goods WHERE goods_price> ANY (SELECT goods_price FROM tdb_goods WHERE goods_cate='超级本'); 
+
+<2>ALL要满足所有
+SELECT goods_id,goods_name,goods_price FROM tdb_goods WHERE goods_price> ALL (SELECT goods_price FROM tdb_goods WHERE goods_cate='超级本'); 
+
+3.由IN或NOT IN 而引发的子查询
+
+=ANY 等价于 IN
+
+!=ALL 等价于 NOT IN
+
+4.由EXISTS或NOT EXISTS引发的子查询(使用较少)
+
+如果子查询返回任何行,EXISTS将返回TRUE,否则返回FALSE.
+
+5.优化数据表(创建两张数据表来建立外键)
+
+CREATE TABLE IF NOT EXISTS tdb_goods_cates(
+	cate_id  SMALLINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+	cate_name VARCHAR(40) NOT NULL
+);
+ 
+ //将查询到的不同的商品分类写入新建的数据表中
+
+ INSERT tdb_goods_cates(cate_name)SELECT goods_cate FROM tdb_goods GROUP BY goods_cate;
+
+ //接下来参照表tdb_goods_cates来更新表tdb_goods
+
+6.多表更新
+
+UPDATE table_references SET col_name1={expr1|DEFAULT}[,col_name2={expr2|DEFAULT}]……[WHERE where_condition]
+
+补充:
+
+表的连接
+
+table_reference
+
+{[INNER|CROSS]JOIN|{LEFT|RIGHT}[OUTER]JOIN}
+
+table_reference
+
+ON condition_expr
+
+连接类型
+
+<1>INNER JOIN ----内连接
+
+在mysql中,JOIN,CROSS JOIN和INNER JOIN 是等价的
+
+LEFT [OUTER] JOIN --- 左外连接
+
+RIGHT [OUTER] JOIN --- 右外连接
+
+////////////////////////////补充结束//////////////////////////////////////
+
+UPDATE tdb_goods INNER JOIN tdb_goods_cates ON goods_cate = cate_name SET goods_cate = cate_id;
+
+//////////////////////////////////////更新完成////////////////////////////////
+
+7.多表更新之一步到位
+
+<1>CREATE …… SELECT……  ------ 创建数据表的同时将查询结果写入到数据表
+
+CREATE TABLE [IF NOT EXISTS] tbl_name [(create_definition,……)]
+select_statement
+
+///////////////////开始优化处理品牌(类似于上面)/////////////////////
+
+//创建品牌表，在创建的同时写入品牌类别
+
+CREATE TABLE tdb_goods_brands(
+	brand_id SMALLINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+	brand_name VARCHAR(40) NOT NULL
+	)
+	SELECT brand_name FROM tdb_goods GROUP BY brand_name;
+
+UPDATE tdb_goods INNER JOIN tdb_goods_brands ON brand_name=brand_name SET brand_name=brand_id;  (会出错,两个brand_name指代不清楚)
+
+----以上解决方法:给表起别名或者在字段前面加表名
+
+--起别名 (使用AS)
+
+UPDATE tdb_goods AS g INNER JOIN tdb_goods_brands AS b ON g.brand_name=b.brand_name SET g.brand_name=b.brand_id;
+
+//注:尽管将上述的商品品牌和商品分类改为数字表示,但其实质还是字符型,下一步将其修改为对应的整型
+
+//接下来改表的名字及数据类型
+ALTER TABLE tdb_goods 
+CHANGE goods_cate cate_id SMALLINT UNSIGNED NOT NULL,
+CHANGE brand_name brand_id SMALLINT UNSIGNED NOT NULL;
+////////////////////////////优化成功/////////////////////////
+
+ 分别在tdb_goods_cates和tdb_goods_brands表插入记录
+
+   INSERT tdb_goods_cates(cate_name) VALUES('路由器'),('交换机'),('网卡');
+
+   INSERT tdb_goods_brands(brand_name) VALUES('海尔'),('清华同方'),('神舟');
+
+-- 在tdb_goods数据表写入任意记录
+
+   INSERT tdb_goods(goods_name,cate_id,brand_id,goods_price) VALUES(' LaserJet Pro P1606dn 黑白激光打印机','12','4','1849');
+
+8.连接
+
+<1> mysql在SELECT语句、多表更新、多表删除语句中支持JOIN操作
+
+table_reference
+{[INNER|CROSS]JOIN|{LEFT|RIGHT}[OUTER]JOIN}
+table_reference
+ON condition_expr
+
+<2>数据表参照
+
+tbl_name[[AS] alias]|table_subquery[AS] alias
+
+数据表可以使用tbl_name AS alias_name或tbl_name alias_name赋予别名
+
+table_subquery 可以作为子查询使用在FROM子句中,这样的子查询必须为其赋予别名。
+
+<3>连接类型
+
+INNER JOIN ----内连接
+
+在mysql中,JOIN,CROSS JOIN和INNER JOIN 是等价的
+
+LEFT [OUTER] JOIN --- 左外连接
+RIGHT [OUTER] JOIN --- 右外连接
+
+--内连接 ------ 仅显示符合连接条件的记录(ON 后面的条件)
+
+SELECT goods_id,goods_name,cate_name FROM tdb_goods INNER JOIN tdb_goods_cates ON tdb_goods.cate_id=tdb_goods_cates.cate_id;
+
+//引用相同的字段,又没有给表取别名,所以只能用表的名字来区分
+
+--左外连接 ------ 仅显示左表中的全部记录以及右表符合连接条件的记录
+
+SELECT goods_id,goods_name,cate_name FROM tdb_goods LEFT JOIN tdb_goods_cates ON tdb_goods.cate_id=tdb_goods_cates.cate_id;
+
+--右外连接 ------ 仅显示右表中的全部记录以及左表符合连接条件的记录
+
+SELECT goods_id,goods_name,cate_name FROM tdb_goods RIGHT JOIN tdb_goods_cates ON tdb_goods.cate_id=tdb_goods_cates.cate_id;
+
+<4>多表连接
+
+SELECT goods_id,goods_name,cate_name,brand_name,goods_price FROM tdb_goods AS g
+INNER JOIN tdb_goods_cates AS c ON g.cate_id = c.cate_id
+INNER JOIN tdb_goods_brands As b ON g.brand_id=b.brand_id\G;
+
+十二、无限级分类表的设计
+
+CREATE TABLE tdb_goods_types(
+	type_id SMALLINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+	type_name VARCHAR(20) NOT NULL,
+	parent_id SMALLINT UNSIGNED NOT NULL DEFAULT 0
+);
+
+--插入数据--
+INSERT tdb_goods_types(type_name,parent_id) VALUES('家用电器',DEFAULT);
+  
+  INSERT tdb_goods_types(type_name,parent_id) VALUES('电脑、办公',DEFAULT);
+  
+  INSERT tdb_goods_types(type_name,parent_id) VALUES('大家电',1);
+  
+  INSERT tdb_goods_types(type_name,parent_id) VALUES('生活电器',1);
+  
+  INSERT tdb_goods_types(type_name,parent_id) VALUES('平板电视',3);
+  
+  INSERT tdb_goods_types(type_name,parent_id) VALUES('空调',3);
+  
+  INSERT tdb_goods_types(type_name,parent_id) VALUES('电风扇',4);
+  
+  INSERT tdb_goods_types(type_name,parent_id) VALUES('饮水机',4);
+  
+  INSERT tdb_goods_types(type_name,parent_id) VALUES('电脑整机',2);
+  
+  INSERT tdb_goods_types(type_name,parent_id) VALUES('电脑配件',2);
+  
+  INSERT tdb_goods_types(type_name,parent_id) VALUES('笔记本',9);
+  
+  INSERT tdb_goods_types(type_name,parent_id) VALUES('超级本',9);
+  
+  INSERT tdb_goods_types(type_name,parent_id) VALUES('游戏本',9);
+  
+  INSERT tdb_goods_types(type_name,parent_id) VALUES('CPU',10);
+  
+  INSERT tdb_goods_types(type_name,parent_id) VALUES('主机',10);
+
+<1>补充:无限分级数据表如何查找 ----- 使用自身连接
+
+同一个数据表对其自身进行连接(想象有同样的一张表作为子表)
+
+////////////////////////////////自身连接//////////////////////////
+
+SELECT s.type_id,s.type_name,p.type_name FROM tdb_goods_types AS s LEFT  JOIN tdb_goods_types AS p
+ON s.parent_id=p.type_id;
+
+SELECT p.type_id,p.type_name,count(s.type_name) child_count  FROM tdb_goods_types p LEFT JOIN
+tdb_goods_types s ON s.parent_id=p.type_id GROUP BY p.type_name ORDER BY p.type_id;
+
+<2>多表删除(通过一张表模拟多表删除)
+
+DELETE tbl_name[.*][,tbl_name[.*]]…… FROM table_references [WHERE where_condition]
+
+--删除其中重复的数据--
+
+SELECT goods_id,goods_name FROM tdb_goods GROUP BY goods_name HAVING count(goods_name)>=2;
+
+DELETE t1 FROM tdb_goods AS t1 LEFT JOIN (SELECT goods_id,goods_name FROM tdb_goods GROUP BY goods_name HAVING count(goods_name)>=2) AS t2 ON t1.goods_name=t2.goods_name WHERE t1.goods_name>t2.goods_name;
+
+十三、mysql中的重要函数
+
+1.字符函数
+
+<1>CONCAT() --------- 字符连接
+
+SELECT CONCAT('AA','--','BB');
+
+例:CREATE DATABASE name;
+
+CREATE TABLE (
+	first_name VARCHAR(10) NOT NULL,
+	last_name VARCHAR(10) NOT NULL
+); 
+
+INSERT name VALUES('js','javascript'),('php',mysql);
+
+SELECT CONCAT(first_name,'--',last_name) AS full_name FROM name;
+
+<2>CONCAT_WS() ------- 使用指定的分隔符进行字符连接
+
+SELECT CONCAT_WS('---','A','B','C');
+
+<3>FORMAT() -------- 数字格式化(每三位用,分隔)
+
+SELECT FORMAT(1234.99,2);    ---(两位小数)
+
+<4>LOWER() ------ 转换成小写字母
+
+SELECT LOWER('AAAA');
+
+<4>UPPER() -------- 转换成大写字母
+
+SELECT UPPER('aaa');
+
+<5>LEFT() ---------- 获取左侧字符串
+
+SELECT LEFT('MYSQL',2);    ----获取两位
+
+<6>RIGHT() ---------- 获取右侧字符串
+
+SELECT LOWER(RIGHT('MYSQL',2));
+
+<7>LENGTH   ------  获取字符串长度
+
+SELECT LENGTH('  MySQL  ');     (长度包含空格)
+
+<8>LTRIM() -------- 删除前导空格
+
+SELECT LENGTH(LTRIM('  MySQL  '));
+
+<9>RTRIM() -------- 删除后续空格
+
+SELECT LENGTH(RTRIM('  MySQL  '));
+
+<10>TRIM() -------- 删除前 导和后续空格
+
+SELECT LENGTH(TRIM('  MySQL  '));
+
+SELECT TRIM(LEADING '?' FROM '??MySQL?????');  ---- 指定删除的前导字符
+
+SELECT TRIM(TRAILING '?' FROM '??MySQL?????');   ---- 指定删除的后续字符
+
+SELECT TRIM(BOTH'?' FROM '??MySQL?????');  ---- 指定前导和后续删除的字符
+
+
+<11>SUBSTRING() ------ 字符串截取
+
+SELECT SUBSTRING('MySQL',1,2);   ----从第一位截取截取两个(所截取的长度--第三个参数不能为负值)
+
+<12>[NOT] LIKE ----- 模式匹配(此处%类似于*,表示任意0个或多个---   '_'代表任意一个字符)
+
+SELECT 'MySQL' LIKE 'M%';
+
+特殊情况处理 ----- 若查找的字符串中包含% 可这样解决 -- SELECT * FROM name WHERE first LIKE '%1%%' ESCAPE '1';   ---'1'后面的%不需要解析
+
+<13>REPLACE() -------- 字符串替换
+
+SELECT REPLACE('???my??sql??','?','');
+
+2.数字运算符和函数
+
+<1>CEIL()  ------ 向上取整(进1取整) ------ SELECT CEIL(-2.9); ---- 结果-2
+
+<2>FLOOR() ------ 向下取整(舍1取整)   --- SELECT FLOOR(-2.9);  ------ 结果为-3
+
+<3>DIV -------- 整数除法
+
+SELECT 3 DIV 4;
+
+<4>MOD ------- 取余数
+
+SELECT 5.2 MOD 3;   ------ 2.2
+
+<5>POWER -------- 幂运算
+
+SELECT POWER(3,3);
+
+<6>ROUND ----- 四舍五入
+
+SELECT ROUND(3.222,2)  ----- 3.22
+
+<7>TRUNCATE ------- 数字截取
+
+SELECT TRUNCATE(1234.786,2);  ----(小数点后截取剩一位) 1234.78
+
+SELECT TRUNCATE(1234.786,-1);  ---1230
+
+3.比较运算符和函数
+<1>[NOT] BETWEEN……AND……  ----- [不]在范围之内
+
+SELECT 15 BETWEEN 1 AND 15;   ---- 1
+
+<2>[NOT]IN()  ------ [不]在范围之内
+
+SELECT 15 IN (10,12,15,8);  ----1
+
+<3>IS [NOT] NULL -------[不]为空
+
+SELECT NULL IS NULL;  ----- 1
+
+SELECT '' IS NULL;   ----- 0
+
+SELECT 0 IS NULL;  ----  0
+
+4.日期时间函数
+
+<1>NOW()  ------ 当前日期和时间
+
+SELECT NOW();
+
+<2>CURDATE()  ------ 当前日期
+
+SELECT CURDATE();
+
+<3>CURTIME()  ------- 当前时间
+
+SELECT CURTIME();
+
+<4>DATE_ADD() ------- 日期变化
+
+SELECT DATE_ADD('2014-3-12',INTERVAL 365 DAY);
+
+SELECT DATE_ADD('2014-3-12',INTERVAL -365 DAY);
+
+SELECT DATE_ADD('2014-3-12',INTERVAL 2 YEAR);
+
+SELECT DATE_ADD('2014-3-12',INTERVAL 365 WEEK);
+
+<5>DATEDIFF()  -----  日期差值
+
+SELECT DATEDIFF('2013-4-23','2015-6-28');  ----   (-796)
+
+<5>DATE_FORMAT() ------ 日期格式化
+
+SELECT DATE_FORMAT('2015-6-28','%m/%d/%Y');   -----06/28/2015
+
+5.信息函数
+
+<1>CONNECTION_ID()  ------  连接ID
+
+<2>DATABASE();  ------ 当前数据库
+
+<3>LAST_INSERT_ID ------ 最后插入记录的ID号  (如果同时写入多条数据,只返回第一个ＩＤ号)
+
+<4>USER()   -------- 当前用户
+
+<5>VERSION()  ------- 版本信息
+
+
+6.聚合函数
+<1> AVG() ---- 平均值  (用在SELECT语句中)
+
+SELECT AVG(goods_price) AS avg_price FROM tdb_goods;
+
+<2> COUNT() ------ 计数
+
+SELECT COUNT(goods_id) AS counts FROM tdb_goods;
+
+以下函数用法同上
+<3> MAX() ------ 最大值
+<4> MIN() ------ 最小值
+<5> SUM() ------ 求和
+
+7.加密函数
+<1>MD5() ------ 信息摘要算法
+
+SELECT MD5('SZH');
+
+<2>PASSWORD  ------- 密码算法
+
+SELECT PASSWORD('SZH');
+用途:修改数据库客户端密码
+SET PASSWORD=PASSWORD('admin');
+
+十四、自定义函数(user-defined function   ----- UDF)
+
+1.语法结构
+CREATE FUNCTION function_name RETURNS {STRING|INTEGER|REAL|DECIMAL} routine_body
+
+---关于函数体--
+<1>函数体由合法的SQL语句构成
+<2>函数体可以是简单的SELECT或INSERT语句
+<3>函数体如果为复合结构则使用BEGIN……END语句
+<4>复合结构可以包含声明,循环,控制结构;
+
+2.创建不带参数的
+
+<1>SELECT DATE_FORMAT(NOW(),'%Y年%m月%d日 %H点:%i分:%s秒');
+
+<2>--封装自定义函数--
+CREATE FUNCTION f1() RETURNS VARCHAR(30)
+RETURN DATE_FORMAT(NOW(),'%Y年%m月%d日 %H点:%i分:%s秒');
+
+<3>--调用---- SELECT f1();
+
+3.创建带有参数的自定义函数
+
+<1>删除函数 ----- DROP FUNCTION f2;
+
+<2>创建一个带参数的求平均值的函数
+
+CREATE FUNCTION f2(num1 SMALLINT UNSIGNED,num2 SMALLINT UNSIGNED)
+RETURNS FLOAT(10,2) UNSIGNED
+RETURN (num1+num2)/2;
+
+<3> ---- 调用---- SELECT f2(2,3);
+
+4.创建具有复合结构函数体的自定义函数
+
+<1>在创建函数语句后的分号(;)与mysql中的结束符(;)混淆,所以要自定义结束符
+
+<2>-- 自定义结束符---
+
+DELIMITER //     ----  规定//为结束符
+
+<3>多条语句的函数(此处写一个插入一条记录并返回插入记录ID号的函数)
+
+--- 选择数据库--- USE test;   --往其中的userstest表中插入数据
+
+DELIMITER //
+
+CREATE FUNCTION adduser(username VARCHAR(20))
+RETURNS INT UNSIGNED
+BEGIN
+INSERT userstest(username)VALUES(username);
+RETURN LAST_INSERT_ID();
+END
+//
+
+十五、存储过程
+
+<1>存储过程是SQL语句和控制语句的预编译集合,以一个名称存储，并作为一个单元处理
+
+<2>创建存储过程
+
+CREATE [DEFINER={user|CURRENT_USER}]
+PROCEDURE sp_name ([proc_parameter[,……]])
+[characteristic……] routine_body
+
+proc_parameter:
+[IN|OUT|INOUT]param_name type
+
+<3> ---- 参数说明 ---
+
+IN ----- 表示该参数的值必须在调用存储过程时指定
+
+OUT ----- 表示该参数的值可以被存储过程改变,并且可以返回
+
+INOUT ----- 表示该参数在调用时指定,并且可以被改变和返回
+
+-----------------------------
+
+COMMENT 'string'
+|{CONTAINS SQL|NO SQL|READS SQL DATA|MODIFIES SQL DATA}
+|SQL SECURITY {DEFINER|INVOKER}
+
+<4>-----------特性-----------
+
+COMMENT:注释
+
+CONTAINS SQL:包含SQL语句,但不包含读或者写数据的语句
+
+NO SQL:不包含SQL语句
+
+READS SQL DATA : 包含读数据的语句
+
+MIDIFIES SQL DATA : 包含写数据的语句
+
+SQL SEUURITY {DEFINER|INVOKER} 指明谁有权限来执行
+
+<5> ------------过程体-------------
+
+过程体由合法的SQL语句构成
+
+过程体可以是任意的SQL语句
+
+过程体如果为复合结构则使用BEGIN……END语句
+
+复合结构可以包含声明、循环、控制结构
+
+<6>创建不带参数的存储过程(获取当前mysql版本)
+
+CREATE PROCEDURE sp1() SELECT VERSION();
+
+----调用存储过程------
+
+CALL sp_name([parameter[,……]])
+
+CALL sp_name[()]
+
+例:调用:CALL sp1;  或 CALL sp1();
+
+<7>创建带有IN类型参数的存储过程
+
+DELIMITER //
+CREATE PROCEDURE removeuserbyid(IN id INT UNSIGNED)
+BEGIN 
+DELETE FROM userstest WHERE id=id;
+END
+//
+
+
+DELIMITER ;
+
+-----调用-----
+
+CALL removebyid(2);  -----所有记录都被删除(原因:创建时id=id)
+
+DELIMITER //
+CREATE PROCEDURE removeuserbyid(IN pid INT UNSIGNED)
+BEGIN 
+DELETE FROM userstest WHERE id=pid;
+END
+//
+
+<8>创建带有IN和OUT类型参数的存储
+
+DELIMITER //
+CREATE PROCEDURE removeuserreturnusernum(IN pid INT UNSIGNED,OUT usernums INT UNSIGNED)
+BEGIN
+DELETE FROM userstest WHERE id=pid;
+SELECT count(id) FROM userstest INTO usernums;
+END
+//
+
+------- 调用---------
+
+CALL removeuserreturnusernum(6,@nums);
+SELECT @nums;
+
+----注:此处的@nums称为用户变量，仅对当前客户端和当前用户有效
+
+<9>创建带有多个OUT类型参数的存储(根据年龄删除用户,并返回删除的用户和剩余的用户)
+
+-----函数:ROW_COUNT()---被影响到的行数
+
+SELECT ROW_COUNT();
+
+DELIMITER //
+CREATE PROCEDURE removeuserbyagereturninfo(IN p_age SMALLINT UNSIGNED,OUT deleteuser SMALLINT UNSIGNED,OUT usercount SMALLINT UNSIGNED)
+BEGIN
+DELETE FROM users WHERE age=p_age;
+SELECT ROW_COUNT() INTO deleteuser;
+SELECT COUNT(id) FROM users INTO usercount;
+END
+//
+
+--- 调用-----
+SELECT removeuserbyagereturninfo(12,@a,@b);
+
+SELECT @a,@b;
+
+<10>存储过程与自定义函数的区别
+
+--存储过程实现的功能要负暂一些
+
+--存储过程可以返回多个值,函数只能返回一个值
+
+--存储过程一般独立来执行,函数一般作为其他SQL语句的组成部分来出现
+
+十五、存储引擎
+
+<1>查看数据表的创建命令   --- SHOW CREATE TABLE tab_name;
+
+<2>存储引擎:mysql可以将数据以不同的技术存储在文件(内存)中,这种技术就称为存储引擎
+
+<3>mysql支持的存储引擎及优点
+
+-------------补充------------------
+
+-- 并发控制----
+当多个连接对记录进行修改时,保证数据的一致性和完整性
+-----------------------------------
+------------锁-------------
+------共享锁(读锁)---同一时间段内,多个用户可以读取同一个资源,读取过程中数据不发生任何变化
+
+------排他锁(写锁)---在任何时候只有一个用户写入资源,刚进行写所偶是会阻塞其他的读锁或者写锁操作
+
+-------锁颗粒-----------------
+
+----表锁--一种开销最小的锁策略
+
+----行锁--一种开销最大的锁策略
+-----------------------------------
+
+-----------事务处理----------------
+
+事务用于保证数据库的完整性
+
+---事务的特性(ACID)--
+
+--原子性(Atomicity)
+
+--一致性(Consistency)
+
+--隔离性(Isolation)
+
+--持久性(Durability)
+
+
+---------------------------------
+ -- MyISAM--存储限制可达256TB,支持外键和索引、表级锁定、数据压缩
+
+ -- InnoDB--存储限制为64TB,支持事务和索引,锁颗粒为行锁
+
+ --Memory -- 支持索引,锁颗粒为表锁
+
+ --Archive --锁颗粒为行锁,支持压缩
+ <4>创建数据表是指定存储引擎
+
+ CREATE TABLE tab_name(
+
+ )ENGINE=engine;
+
+ <5>创建成功的数据表修改存储引擎
+
+ ALTER TABLE tab_name ENGINE [=] engine
